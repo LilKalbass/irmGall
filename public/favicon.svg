@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fb7185;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ec4899;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Rounded rectangle background -->
+  <rect x="10" y="10" width="80" height="80" rx="16" fill="url(#grad)"/>
+  <!-- Camera icon -->
+  <g fill="white">
+    <!-- Camera body -->
+    <rect x="25" y="38" width="50" height="35" rx="4"/>
+    <!-- Lens -->
+    <circle cx="50" cy="55" r="12"/>
+    <circle cx="50" cy="55" r="7" fill="url(#grad)"/>
+    <circle cx="50" cy="55" r="4" fill="white"/>
+    <!-- Flash -->
+    <rect x="62" y="43" width="8" height="5" rx="1"/>
+    <!-- Viewfinder -->
+    <rect x="40" y="30" width="20" height="10" rx="2"/>
+  </g>
+  <!-- Sparkle -->
+  <circle cx="75" cy="25" r="4" fill="#fcd34d"/>
+  <circle cx="82" cy="32" r="2" fill="#fcd34d" opacity="0.7"/>
+</svg>
+
