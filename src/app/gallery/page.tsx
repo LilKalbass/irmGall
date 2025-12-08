@@ -60,7 +60,7 @@ function GalleryContent() {
   const [showConfetti, setShowConfetti] = useState(false);
   
   // Get user nickname from session
-  const userName = (session?.user as { nickname?: string })?.nickname || session?.user?.name;
+  const userName = (session?.user as { nickname?: string })?.nickname || session?.user?.name || undefined;
   
   // Handle add photo click
   const handleAddPhoto = useCallback(() => {

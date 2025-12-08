@@ -78,7 +78,7 @@ export const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
     {
       children,
       blur = 'medium',
-      opacity = 65,
+      opacity: _opacity = 65,
       hoverEffect = 'lift',
       bordered = true,
       rounded = 'xl',
