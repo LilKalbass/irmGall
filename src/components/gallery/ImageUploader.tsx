@@ -229,7 +229,7 @@ export function ImageUploader({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            {...getRootProps()}
+            {...(({ onDrag, onDragStart, onDragEnd, onDragOver, ...rest }) => rest)(getRootProps())}
             className={cn(
               'relative aspect-square rounded-xl cursor-pointer',
               'bg-white/20 backdrop-blur-sm',
