@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Check, Heart, Sparkles } from 'lucide-react';
+import { Check, Heart, Sparkles, LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
@@ -42,7 +42,7 @@ const sizeConfig: Record<SuccessSize, { circle: number; icon: number; text: stri
 /**
  * Variant icons
  */
-const variantIcons: Record<SuccessVariant, React.ComponentType<{ size: number; className?: string }>> = {
+const variantIcons: Record<SuccessVariant, LucideIcon> = {
   check: Check,
   heart: Heart,
   sparkles: Sparkles,
