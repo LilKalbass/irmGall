@@ -15,7 +15,7 @@ import { NextResponse } from 'next/server';
  * - Static assets
  */
 export default withAuth(
-  function middleware(req) {
+  function middleware() {
     // Allow the request to continue
     return NextResponse.next();
   },

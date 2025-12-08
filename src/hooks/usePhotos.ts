@@ -273,7 +273,7 @@ export function usePhotos(options: UsePhotosOptions = {}) {
       if (newFavoriteStatus) {
         toast.success('Added to favorites! 💕');
       }
-    } catch (err) {
+    } catch {
       // Revert on error
       toggleFavoriteInStore(photo.id);
       toast.error('Failed to update favorite');

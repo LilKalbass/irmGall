@@ -22,9 +22,17 @@ const ALLOWED_TYPES = [
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 /**
- * Upload directory path
+ * Check if running in serverless environment
  */
-const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
+const IS_SERVERLESS = process.env.VERCEL === '1' || process.env.AWS_LAMBDA_FUNCTION_NAME;
+
+/**
+ * Upload directory path
+ * Use /tmp for serverless environments where public folder is read-only
+ */
+const UPLOAD_DIR = IS_SERVERLESS
+  ? '/tmp/uploads'
+  : path.join(process.cwd(), 'public', 'uploads');
 
 /**
  * Ensure upload directory exists
@@ -33,7 +41,11 @@ async function ensureUploadDir(): Promise<void> {
   try {
     await fs.access(UPLOAD_DIR);
   } catch {
-    await fs.mkdir(UPLOAD_DIR, { recursive: true });
+    try {
+      await fs.mkdir(UPLOAD_DIR, { recursive: true });
+    } catch (error) {
+      console.warn('Could not create upload directory:', error);
+    }
   }
 }
 

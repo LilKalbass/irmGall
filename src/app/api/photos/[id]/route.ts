@@ -96,8 +96,15 @@ export async function PUT(
       );
     }
     
+    // Transform null values to undefined for compatibility
+    const updateData = {
+      ...validationResult.data,
+      description: validationResult.data.description ?? undefined,
+      dateTaken: validationResult.data.dateTaken ?? undefined,
+    };
+    
     // Update photo
-    const updatedPhoto = await updatePhoto(id, validationResult.data);
+    const updatedPhoto = await updatePhoto(id, updateData);
     
     return NextResponse.json({
       success: true,

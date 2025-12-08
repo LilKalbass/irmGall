@@ -2,13 +2,9 @@
  * Utility script to hash passwords for the allowedUsers config
  * 
  * Usage: npm run hash-password -- "your-password-here"
- * 
- * Or run directly with ts-node:
- * npx ts-node --compiler-options '{"module":"CommonJS"}' src/scripts/hashPassword.ts "your-password"
  */
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const bcryptLib = require('bcryptjs');
+import bcrypt from 'bcryptjs';
 
 async function main() {
   const password = process.argv[2];
@@ -25,7 +21,7 @@ async function main() {
   console.log('\n🔐 Hashing password...\n');
   
   const saltRounds = 12;
-  const hash = await bcryptLib.hash(password, saltRounds);
+  const hash = await bcrypt.hash(password, saltRounds);
   
   console.log('✅ Password hash generated!\n');
   console.log('Hash:');

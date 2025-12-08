@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import { RefreshCw, Home, AlertTriangle } from 'lucide-react';
 import { AnimatedBackground } from '@/components/background';
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -91,14 +92,14 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
               >
                 Try Again
               </GlassButton>
-              <a href="/">
+              <Link href="/">
                 <GlassButton
                   variant="secondary"
                   leftIcon={<Home size={18} />}
                 >
                   Go Home
                 </GlassButton>
-              </a>
+              </Link>
             </div>
           </motion.div>
         </GlassCard>

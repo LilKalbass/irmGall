@@ -72,7 +72,7 @@ export function GalleryHeader({
             <motion.h1
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="text-xl sm:text-2xl font-display font-bold flex items-center gap-2"
+              className="text-lg xs:text-xl sm:text-2xl font-display font-bold flex items-center gap-2"
             >
               <span className="gradient-text truncate">IRM Gallery</span>
               <motion.span
@@ -85,7 +85,7 @@ export function GalleryHeader({
             </motion.h1>
             
             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-              <p className="text-xs sm:text-sm text-blush-600/70 truncate">
+              <p className="text-xs sm:text-sm text-blush-600/70 dark:text-blush-300/70 truncate">
                 {photoCount === 0 ? (
                   'Start your memories'
                 ) : photoCount === 1 ? (
@@ -95,14 +95,14 @@ export function GalleryHeader({
                 )}
                 {userName && (
                   <span className="hidden sm:inline ml-1">
-                    • <span className="text-blush-500 font-medium">{userName}</span>
+                    • <span className="text-blush-500 dark:text-blush-300 font-medium">{userName}</span>
                   </span>
                 )}
               </p>
               
               {/* Live sync indicator */}
               <div 
-                className="flex items-center gap-1 text-xs text-sage-600 flex-shrink-0" 
+                className="flex items-center gap-1 text-xs text-sage-600 dark:text-sage-400 flex-shrink-0" 
                 title="Real-time sync active"
               >
                 <Wifi size={10} />

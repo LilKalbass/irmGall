@@ -6,15 +6,12 @@
  * 2. Initializes the photos.json data file
  * 3. Generates password hashes for default users
  * 
- * Run with: npx ts-node --compiler-options '{"module":"CommonJS"}' src/scripts/init.ts
+ * Run with: npm run init
  */
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const fs = require('fs');
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const path = require('path');
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const bcryptLib = require('bcryptjs');
+import fs from 'fs';
+import path from 'path';
+import bcrypt from 'bcryptjs';
 
 const DATA_DIR = path.join(process.cwd(), 'src', 'data');
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
@@ -61,7 +58,7 @@ async function main() {
   console.log('─'.repeat(60));
   
   for (const user of defaultUsers) {
-    const hash = await bcryptLib.hash(user.password, 12);
+    const hash = await bcrypt.hash(user.password, 12);
     console.log(`\nNickname: ${user.nickname}`);
     console.log(`Password: ${user.password}`);
     console.log(`Hash: ${hash}`);
@@ -82,4 +79,3 @@ main().catch((err) => {
   console.error('Error:', err);
   process.exit(1);
 });
-

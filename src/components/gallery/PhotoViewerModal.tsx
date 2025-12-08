@@ -14,7 +14,6 @@ import {
   ZoomIn,
   ZoomOut
 } from 'lucide-react';
-import { GlassButton } from '@/components/ui/GlassButton';
 import { cn, formatDate } from '@/lib/utils';
 import type { Photo } from '@/types/photo';
 

@@ -38,10 +38,7 @@ function GalleryContent() {
     updatePhoto,
     deletePhoto,
     toggleFavorite,
-    selectPhoto,
-    selectedPhoto,
     setFilters,
-    clearFilters,
     setSortOption,
     refreshPhotos,
   } = usePhotos({

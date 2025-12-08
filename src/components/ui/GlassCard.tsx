@@ -64,7 +64,7 @@ const roundedClasses: Record<string, string> = {
   md: 'rounded-xl',
   lg: 'rounded-2xl',
   xl: 'rounded-3xl',
-  '2xl': 'rounded-4xl',
+  '2xl': 'rounded-[2rem]',
   full: 'rounded-full',
 };
 
@@ -89,15 +89,14 @@ export const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
     },
     ref
   ) => {
-    // Calculate background opacity with warm tint
-    const bgOpacity = Math.min(100, Math.max(0, opacity)) / 100;
-    
     return (
       <div
         ref={ref}
         className={cn(
           // Base styles
           'relative overflow-hidden',
+          // Background - uses CSS variable that changes in dark mode
+          'bg-[var(--glass-bg)]',
           // Blur
           blurClasses[blur],
           // Border radius
@@ -105,27 +104,25 @@ export const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
           // Hover effect
           'transition-all duration-300 ease-out',
           hoverClasses[hoverEffect],
-          // Border - warm tint (adapts to dark mode via CSS)
-          bordered && 'border border-blush-200/30 dark:border-blush-500/10',
+          // Border - warm tint (adapts to dark mode)
+          bordered && 'border border-blush-200/30 dark:border-blush-400/20',
           // Shadow
-          'shadow-glass',
+          'shadow-glass dark:shadow-lg dark:shadow-black/20',
           // Inner shadow for depth
           innerShadow && 'shadow-glass-inner',
           // Interactive cursor
           interactive && 'cursor-pointer',
           // Prevent overflow
           'max-w-full',
-          // Background using CSS variable
-          'bg-[var(--glass-bg)]',
           className
         )}
         {...props}
       >
-        {/* Warm gradient overlay for extra depth */}
+        {/* Warm gradient overlay for extra depth - dimmed in dark mode */}
         <div 
-          className="pointer-events-none absolute inset-0 rounded-inherit opacity-100 dark:opacity-30"
+          className="pointer-events-none absolute inset-0 rounded-[inherit] opacity-50 dark:opacity-10"
           style={{
-            background: 'linear-gradient(135deg, rgba(255,250,248,0.15) 0%, transparent 50%, rgba(255,230,220,0.08) 100%)',
+            background: 'linear-gradient(135deg, rgba(255,250,248,0.2) 0%, transparent 50%, rgba(255,230,220,0.1) 100%)',
           }}
         />
         

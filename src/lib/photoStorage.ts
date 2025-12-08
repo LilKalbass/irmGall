@@ -6,9 +6,19 @@ import { getRandomRotation } from './utils';
 
 /**
  * Path to the photos data file
+ * Using /tmp for serverless environments (Vercel) where root is read-only
  */
-const DATA_DIR = path.join(process.cwd(), 'src', 'data');
+const IS_SERVERLESS = process.env.VERCEL === '1' || process.env.AWS_LAMBDA_FUNCTION_NAME;
+const DATA_DIR = IS_SERVERLESS 
+  ? '/tmp' 
+  : path.join(process.cwd(), 'src', 'data');
 const PHOTOS_FILE = path.join(DATA_DIR, 'photos.json');
+
+/**
+ * In-memory cache for serverless environments
+ * Note: This will reset on cold starts
+ */
+let memoryCache: PhotoFrame[] | null = null;
 
 /**
  * Ensure data directory and file exist
@@ -17,13 +27,23 @@ async function ensureDataFile(): Promise<void> {
   try {
     await fs.access(DATA_DIR);
   } catch {
-    await fs.mkdir(DATA_DIR, { recursive: true });
+    try {
+      await fs.mkdir(DATA_DIR, { recursive: true });
+    } catch {
+      // Directory might already exist or we can't create it
+      console.warn('Could not create data directory:', DATA_DIR);
+    }
   }
   
   try {
     await fs.access(PHOTOS_FILE);
   } catch {
-    await fs.writeFile(PHOTOS_FILE, JSON.stringify([], null, 2));
+    try {
+      await fs.writeFile(PHOTOS_FILE, JSON.stringify([], null, 2));
+    } catch {
+      // Can't create file, will use memory cache
+      console.warn('Could not create photos.json, using memory cache');
+    }
   }
 }
 
@@ -31,17 +51,38 @@ async function ensureDataFile(): Promise<void> {
  * Read photos from the data file
  */
 async function readPhotos(): Promise<PhotoFrame[]> {
-  await ensureDataFile();
-  const data = await fs.readFile(PHOTOS_FILE, 'utf-8');
-  return JSON.parse(data);
+  // Try memory cache first
+  if (memoryCache !== null) {
+    return memoryCache;
+  }
+  
+  try {
+    await ensureDataFile();
+    const data = await fs.readFile(PHOTOS_FILE, 'utf-8');
+    const photos = JSON.parse(data);
+    memoryCache = photos;
+    return photos;
+  } catch (error) {
+    console.warn('Could not read photos.json, returning empty array:', error);
+    memoryCache = [];
+    return [];
+  }
 }
 
 /**
  * Write photos to the data file
  */
 async function writePhotos(photos: PhotoFrame[]): Promise<void> {
-  await ensureDataFile();
-  await fs.writeFile(PHOTOS_FILE, JSON.stringify(photos, null, 2));
+  // Always update memory cache
+  memoryCache = photos;
+  
+  try {
+    await ensureDataFile();
+    await fs.writeFile(PHOTOS_FILE, JSON.stringify(photos, null, 2));
+  } catch (error) {
+    console.warn('Could not write to photos.json, data stored in memory only:', error);
+    // Data is still in memory cache, so operations will work for this request
+  }
 }
 
 /**

@@ -39,39 +39,45 @@ interface GlassButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 /**
- * Variant style mapping - warm palette
+ * Variant style mapping - warm palette with dark mode support
  */
 const variantClasses: Record<ButtonVariant, string> = {
   primary: cn(
     'bg-gradient-to-r from-blush-300 to-blush-400',
-    'text-blush-900',
+    'dark:from-blush-500 dark:to-blush-600',
+    'text-blush-900 dark:text-white',
     'hover:from-blush-400 hover:to-blush-500',
+    'dark:hover:from-blush-600 dark:hover:to-blush-700',
     'shadow-cute hover:shadow-cute-lg',
-    'border-blush-200/50'
+    'border-blush-200/50 dark:border-blush-500/30'
   ),
   secondary: cn(
     'bg-white/40 hover:bg-white/55',
-    'text-blush-800',
-    'border-blush-200/40',
-    'hover:border-blush-300/50'
+    'dark:bg-white/10 dark:hover:bg-white/20',
+    'text-blush-800 dark:text-blush-100',
+    'border-blush-200/40 dark:border-blush-400/20',
+    'hover:border-blush-300/50 dark:hover:border-blush-400/30'
   ),
   ghost: cn(
     'bg-transparent hover:bg-blush-50/50',
-    'text-blush-700',
+    'dark:hover:bg-blush-500/20',
+    'text-blush-700 dark:text-blush-200',
     'border-transparent',
-    'hover:border-blush-200/30'
+    'hover:border-blush-200/30 dark:hover:border-blush-500/20'
   ),
   danger: cn(
     'bg-gradient-to-r from-red-300 to-red-400',
-    'text-red-900',
+    'dark:from-red-500 dark:to-red-600',
+    'text-red-900 dark:text-white',
     'hover:from-red-400 hover:to-red-500',
-    'border-red-200/50'
+    'border-red-200/50 dark:border-red-500/30'
   ),
   success: cn(
     'bg-gradient-to-r from-sage-300 to-sage-400',
-    'text-sage-900',
+    'dark:from-sage-500 dark:to-sage-600',
+    'text-sage-900 dark:text-white',
     'hover:from-sage-400 hover:to-sage-500',
-    'border-sage-200/50'
+    'border-sage-200/50 dark:border-sage-500/30'
   ),
 };
 

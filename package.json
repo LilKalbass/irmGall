@@ -8,8 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "init": "node src/scripts/init.js",
-    "hash-password": "node src/scripts/hashPassword.js"
+    "init": "npx tsx src/scripts/init.ts",
+    "hash-password": "npx tsx src/scripts/hashPassword.ts"
   },
   "dependencies": {
     "next": "^15.0.3",

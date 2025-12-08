@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -95,7 +95,6 @@ export function PhotoEditorModal({
   // Watch form values
   const tags = watch('tags');
   const isFavorite = watch('isFavorite');
-  const imageUrl = watch('imageUrl' as keyof PhotoFormData) as string | undefined;
   
   // Track uploaded image URL separately
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>(photo?.imageUrl || '');

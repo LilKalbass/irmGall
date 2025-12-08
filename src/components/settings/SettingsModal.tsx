@@ -2,7 +2,7 @@
 
 import { useSession, signOut } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Sun, Moon, Monitor, Palette, Image, Grid, LogOut, RotateCcw } from 'lucide-react';
+import { X, Sun, Moon, Monitor, Palette, Image as ImageIcon, Grid, LogOut, RotateCcw } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlassButton } from '@/components/ui/GlassButton';
 import { useSettingsStore } from '@/stores/settingsStore';
@@ -90,9 +90,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   </h2>
                   <button
                     onClick={onClose}
-                    className="p-2 rounded-full hover:bg-blush-100/50 transition-colors"
+                    className="p-2 rounded-full hover:bg-blush-100/50 dark:hover:bg-blush-500/20 transition-colors"
                   >
-                    <X size={18} className="text-blush-500" />
+                    <X size={18} className="text-blush-500 dark:text-blush-300" />
                   </button>
                 </div>
                 
@@ -100,14 +100,14 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 <div className="space-y-6">
                   {/* Appearance */}
                   <section>
-                    <h3 className="text-xs font-semibold text-blush-500 uppercase tracking-wide mb-3 flex items-center gap-2">
+                    <h3 className="text-xs font-semibold text-blush-500 dark:text-blush-300 uppercase tracking-wide mb-3 flex items-center gap-2">
                       <Palette size={14} />
                       Appearance
                     </h3>
                     
                     {/* Theme */}
                     <div className="mb-4">
-                      <label className="text-xs font-medium text-blush-700 mb-2 block">
+                      <label className="text-xs font-medium text-blush-700 dark:text-blush-200 mb-2 block">
                         Theme
                       </label>
                       <div className="flex gap-2">
@@ -119,8 +119,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                               'flex-1 flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl',
                               'transition-all duration-200 text-xs font-medium',
                               settings.appearance.theme === option.value
-                                ? 'bg-blush-100 text-blush-700 ring-1 ring-blush-300'
-                                : 'bg-white/30 text-blush-600 hover:bg-white/50'
+                                ? 'bg-blush-100 dark:bg-blush-500/30 text-blush-700 dark:text-blush-200 ring-1 ring-blush-300 dark:ring-blush-500/50'
+                                : 'bg-white/30 dark:bg-white/10 text-blush-600 dark:text-blush-300 hover:bg-white/50 dark:hover:bg-white/20'
                             )}
                           >
                             {option.icon}
@@ -132,7 +132,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     
                     {/* Accent Color */}
                     <div className="mb-4">
-                      <label className="text-xs font-medium text-blush-700 mb-2 block">
+                      <label className="text-xs font-medium text-blush-700 dark:text-blush-200 mb-2 block">
                         Accent Color
                       </label>
                       <div className="flex gap-2">
@@ -155,7 +155,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     
                     {/* Reduce Motion */}
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-medium text-blush-700">
+                      <label className="text-xs font-medium text-blush-700 dark:text-blush-200">
                         Reduce Motion
                       </label>
                       <button
@@ -182,7 +182,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   {/* Background */}
                   <section>
                     <h3 className="text-xs font-semibold text-blush-500 uppercase tracking-wide mb-3 flex items-center gap-2">
-                      <Image size={14} />
+                      <ImageIcon size={14} />
                       Background
                     </h3>
                     

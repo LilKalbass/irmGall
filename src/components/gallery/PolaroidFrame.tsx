@@ -57,21 +57,21 @@ const sizeConfig: Record<PolaroidSize, {
   padding: number; 
   bottomPadding: number;
 }> = {
-  sm: { width: 'w-36 sm:w-44', maxWidth: 176, imageHeight: 'aspect-square', padding: 8, bottomPadding: 28 },
-  md: { width: 'w-44 sm:w-56', maxWidth: 224, imageHeight: 'aspect-square', padding: 10, bottomPadding: 36 },
-  lg: { width: 'w-56 sm:w-72', maxWidth: 288, imageHeight: 'aspect-square', padding: 12, bottomPadding: 44 },
+  sm: { width: 'w-36 sm:w-44', maxWidth: 176, imageHeight: 'aspect-square', padding: 6, bottomPadding: 40 },
+  md: { width: 'w-44 sm:w-56', maxWidth: 224, imageHeight: 'aspect-square', padding: 8, bottomPadding: 48 },
+  lg: { width: 'w-56 sm:w-72', maxWidth: 288, imageHeight: 'aspect-square', padding: 10, bottomPadding: 56 },
 };
 
 /**
- * Frame color styles - warm palette
+ * Frame color styles - warm palette with dark mode support
  */
 const frameColors: Record<FrameColor, string> = {
-  white: 'bg-[#fffcf9]',
-  cream: 'bg-[#fffaf5]',
-  pink: 'bg-[#fff8f7]',
-  lavender: 'bg-[#faf8fc]',
-  mint: 'bg-[#f8fcf9]',
-  peach: 'bg-[#fff9f6]',
+  white: 'bg-[#fffcf9] dark:bg-[#2a2428]',
+  cream: 'bg-[#fffaf5] dark:bg-[#2c2624]',
+  pink: 'bg-[#fff8f7] dark:bg-[#2d2528]',
+  lavender: 'bg-[#faf8fc] dark:bg-[#28262c]',
+  mint: 'bg-[#f8fcf9] dark:bg-[#262a28]',
+  peach: 'bg-[#fff9f6] dark:bg-[#2c2826]',
 };
 
 /**
@@ -279,7 +279,7 @@ export function PolaroidFrame({
               >
                 <h3 
                   className={cn(
-                    'font-handwriting text-blush-800 leading-tight truncate px-1',
+                    'font-handwriting text-blush-800 dark:text-blush-200 leading-tight truncate px-1',
                     size === 'sm' ? 'text-sm' : size === 'md' ? 'text-base' : 'text-lg'
                   )}
                 >
@@ -288,11 +288,22 @@ export function PolaroidFrame({
                 {photo.dateTaken && (
                   <p 
                     className={cn(
-                      'font-handwriting text-blush-400 mt-0.5 truncate',
+                      'font-handwriting text-blush-400 dark:text-blush-300 mt-0.5 truncate',
                       size === 'sm' ? 'text-xs' : 'text-sm'
                     )}
                   >
                     {formatDate(photo.dateTaken, 'cute')}
+                  </p>
+                )}
+                {photo.description && (
+                  <p 
+                    className={cn(
+                      'font-handwriting text-blush-500 dark:text-blush-300/70 mt-1 line-clamp-2 px-1',
+                      size === 'sm' ? 'text-xs' : size === 'md' ? 'text-sm' : 'text-base'
+                    )}
+                    title={photo.description}
+                  >
+                    {photo.description}
                   </p>
                 )}
               </div>
@@ -323,19 +334,19 @@ export function PolaroidFrame({
                 }}
                 className={cn(
                   'absolute top-2 right-2 p-1.5 rounded-full',
-                  'bg-cream-100 hover:bg-cream-200',
+                  'bg-cream-100 dark:bg-cream-800 hover:bg-cream-200 dark:hover:bg-cream-700',
                   'transition-colors duration-200'
                 )}
               >
-                <RotateCcw size={14} className="text-blush-500" />
+                <RotateCcw size={14} className="text-blush-500 dark:text-blush-300" />
               </button>
               
               {/* Description content */}
               <div className="pt-6 px-1">
-                <h3 className="font-handwriting text-base text-blush-700 mb-2 truncate">
+                <h3 className="font-handwriting text-base text-blush-700 dark:text-blush-200 mb-2 truncate">
                   {photo.title}
                 </h3>
-                <p className="font-handwriting text-blush-600 text-sm leading-relaxed text-ellipsis-3">
+                <p className="font-handwriting text-blush-600 dark:text-blush-300 text-sm leading-relaxed text-ellipsis-3">
                   {photo.description}
                 </p>
                 
@@ -347,7 +358,7 @@ export function PolaroidFrame({
                         key={tag}
                         className={cn(
                           'px-2 py-0.5 rounded-full text-xs',
-                          'bg-blush-100 text-blush-600',
+                          'bg-blush-100 dark:bg-blush-800/50 text-blush-600 dark:text-blush-300',
                           'truncate max-w-[80px]'
                         )}
                       >
@@ -355,14 +366,14 @@ export function PolaroidFrame({
                       </span>
                     ))}
                     {photo.tags.length > 3 && (
-                      <span className="text-xs text-blush-400">+{photo.tags.length - 3}</span>
+                      <span className="text-xs text-blush-400 dark:text-blush-500">+{photo.tags.length - 3}</span>
                     )}
                   </div>
                 )}
                 
                 {/* Date */}
                 {photo.dateTaken && (
-                  <p className="font-handwriting text-blush-400 text-xs mt-3">
+                  <p className="font-handwriting text-blush-400 dark:text-blush-500 text-xs mt-3">
                     {formatDate(photo.dateTaken, 'long')}
                   </p>
                 )}

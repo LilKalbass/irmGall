@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Photo, PhotoFrame, PhotoFilters, PhotoSortOption } from '@/types/photo';
+import type { PhotoFrame, PhotoFilters, PhotoSortOption } from '@/types/photo';
 
 /**
  * Gallery store state interface

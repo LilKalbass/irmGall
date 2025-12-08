@@ -40,19 +40,31 @@
 }
 
 .dark {
-  --glass-bg: rgba(40, 30, 35, 0.75);
-  --glass-border: rgba(255, 200, 200, 0.1);
-  --glass-shadow: rgba(0, 0, 0, 0.3);
+  --glass-bg: rgba(35, 25, 30, 0.85);
+  --glass-border: rgba(255, 180, 180, 0.15);
+  --glass-shadow: rgba(0, 0, 0, 0.4);
   
-  --bg-primary: 25 20 22;
-  --bg-secondary: 35 28 32;
+  --bg-primary: 22 18 20;
+  --bg-secondary: 30 24 28;
+  --bg-accent: 40 32 36;
   
   --text-primary: 255 248 245;
-  --text-secondary: 220 200 200;
-  --text-muted: 150 130 130;
+  --text-secondary: 200 180 180;
+  --text-muted: 140 120 120;
   
   --polaroid-bg: #2a2226;
   --polaroid-border: #3a3035;
+  --polaroid-shadow: rgba(0, 0, 0, 0.3);
+}
+
+/* Force dark mode styles */
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body {
+  background: rgb(22, 18, 20);
+  color: rgb(255, 248, 245);
 }
 
 /* Accent color classes */

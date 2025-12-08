@@ -78,7 +78,7 @@ export const GlassInput = forwardRef<HTMLInputElement, GlassInputProps>(
       <div className={cn('flex flex-col gap-1', fullWidth && 'w-full')}>
         {/* Label */}
         {label && (
-          <label className="text-xs font-medium text-blush-700 ml-0.5">
+          <label className="text-xs font-medium text-blush-700 dark:text-blush-200 ml-0.5">
             {label}
           </label>
         )}
@@ -87,7 +87,7 @@ export const GlassInput = forwardRef<HTMLInputElement, GlassInputProps>(
         <div className="relative">
           {/* Left icon */}
           {leftIcon && (
-            <div className="absolute left-2.5 top-1/2 -translate-y-1/2 text-blush-400 pointer-events-none">
+            <div className="absolute left-2.5 top-1/2 -translate-y-1/2 text-blush-400 dark:text-blush-300 pointer-events-none">
               {leftIcon}
             </div>
           )}
@@ -99,14 +99,16 @@ export const GlassInput = forwardRef<HTMLInputElement, GlassInputProps>(
             className={cn(
               // Base styles
               'w-full rounded-xl',
-              'bg-white/50 backdrop-blur-sm',
-              'border border-blush-200/50',
-              'text-blush-800 placeholder:text-blush-400/70',
+              'bg-white/50 dark:bg-white/10 backdrop-blur-sm',
+              'border border-blush-200/50 dark:border-blush-400/20',
+              'text-blush-800 dark:text-blush-100',
+              'placeholder:text-blush-400/70 dark:placeholder:text-blush-300/50',
               'transition-all duration-200 ease-out',
               
               // Focus styles
-              'focus:outline-none focus:ring-2 focus:ring-blush-300/50',
-              'focus:border-blush-300/60 focus:bg-white/60',
+              'focus:outline-none focus:ring-2 focus:ring-blush-300/50 dark:focus:ring-blush-500/30',
+              'focus:border-blush-300/60 dark:focus:border-blush-500/40',
+              'focus:bg-white/60 dark:focus:bg-white/15',
               
               // Size
               sizeClasses[size],
@@ -153,7 +155,7 @@ export const GlassInput = forwardRef<HTMLInputElement, GlassInputProps>(
         {(helperText || error) && (
           <div className={cn(
             'text-xs ml-0.5 flex items-center gap-1',
-            hasError ? 'text-red-500' : 'text-blush-500/70'
+            hasError ? 'text-red-500 dark:text-red-400' : 'text-blush-500/70 dark:text-blush-400/70'
           )}>
             {hasError && <AlertCircle size={11} />}
             <span className="truncate">{error || helperText}</span>

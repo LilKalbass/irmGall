@@ -74,15 +74,6 @@ interface StaggerContainerProps {
   className?: string;
 }
 
-const containerVariants = {
-  initial: {},
-  animate: {
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-};
-
 export function StaggerContainer({ 
   children, 
   staggerDelay = 0.1,
