@@ -1,7 +1,19 @@
-import { put, list, del } from '@vercel/blob';
 import { v4 as uuidv4 } from 'uuid';
+import { promises as fs } from 'fs';
+import path from 'path';
 import type { Photo, PhotoFrame, PhotoFilters, PhotoSortOption, FrameColor } from '@/types/photo';
 import { getRandomRotation } from './utils';
+
+/**
+ * Check if we're in a Vercel environment with Blob storage
+ */
+const HAS_BLOB_TOKEN = !!process.env.BLOB_READ_WRITE_TOKEN;
+
+/**
+ * Local file storage path
+ */
+const DATA_DIR = path.join(process.cwd(), 'src', 'data');
+const PHOTOS_FILE = path.join(DATA_DIR, 'photos.json');
 
 /**
  * Blob storage filename for photos data
@@ -9,59 +21,85 @@ import { getRandomRotation } from './utils';
 const PHOTOS_BLOB_NAME = 'photos-data.json';
 
 /**
- * In-memory cache to reduce blob reads
+ * In-memory cache
  */
 let memoryCache: PhotoFrame[] | null = null;
 let lastFetchTime = 0;
 const CACHE_TTL = 5000; // 5 seconds
 
 /**
+ * Ensure local data directory exists
+ */
+async function ensureLocalDataDir(): Promise<void> {
+  try {
+    await fs.access(DATA_DIR);
+  } catch {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+  }
+  try {
+    await fs.access(PHOTOS_FILE);
+  } catch {
+    await fs.writeFile(PHOTOS_FILE, JSON.stringify([], null, 2));
+  }
+}
+
+/**
+ * Read photos from local file
+ */
+async function readPhotosLocal(): Promise<PhotoFrame[]> {
+  try {
+    await ensureLocalDataDir();
+    const data = await fs.readFile(PHOTOS_FILE, 'utf-8');
+    return JSON.parse(data);
+  } catch (error) {
+    console.warn('Could not read local photos.json:', error);
+    return [];
+  }
+}
+
+/**
+ * Write photos to local file
+ */
+async function writePhotosLocal(photos: PhotoFrame[]): Promise<void> {
+  try {
+    await ensureLocalDataDir();
+    await fs.writeFile(PHOTOS_FILE, JSON.stringify(photos, null, 2));
+  } catch (error) {
+    console.warn('Could not write to local photos.json:', error);
+  }
+}
+
+/**
  * Read photos from Vercel Blob storage
  */
-async function readPhotos(): Promise<PhotoFrame[]> {
-  // Check cache first (within TTL)
-  const now = Date.now();
-  if (memoryCache !== null && (now - lastFetchTime) < CACHE_TTL) {
-    return memoryCache;
-  }
-  
+async function readPhotosBlob(): Promise<PhotoFrame[]> {
   try {
-    // List blobs to find our data file
+    const { list } = await import('@vercel/blob');
     const { blobs } = await list({ prefix: PHOTOS_BLOB_NAME });
     
     if (blobs.length === 0) {
-      // No data file exists yet
-      memoryCache = [];
-      lastFetchTime = now;
       return [];
     }
     
-    // Fetch the data
     const response = await fetch(blobs[0].url);
     if (!response.ok) {
       throw new Error('Failed to fetch photos data');
     }
     
-    const photos = await response.json();
-    memoryCache = photos;
-    lastFetchTime = now;
-    return photos;
+    return await response.json();
   } catch (error) {
     console.error('Error reading photos from blob:', error);
-    // Return cache if available, otherwise empty array
-    return memoryCache || [];
+    return [];
   }
 }
 
 /**
  * Write photos to Vercel Blob storage
  */
-async function writePhotos(photos: PhotoFrame[]): Promise<void> {
-  // Update memory cache immediately
-  memoryCache = photos;
-  lastFetchTime = Date.now();
-  
+async function writePhotosBlob(photos: PhotoFrame[]): Promise<void> {
   try {
+    const { put, list, del } = await import('@vercel/blob');
+    
     // Delete old blob if exists
     const { blobs } = await list({ prefix: PHOTOS_BLOB_NAME });
     for (const blob of blobs) {
@@ -77,7 +115,35 @@ async function writePhotos(photos: PhotoFrame[]): Promise<void> {
     });
   } catch (error) {
     console.error('Error writing photos to blob:', error);
-    // Data is still in memory cache for this request
+  }
+}
+
+/**
+ * Read photos (auto-selects storage based on environment)
+ */
+async function readPhotos(): Promise<PhotoFrame[]> {
+  const now = Date.now();
+  if (memoryCache !== null && (now - lastFetchTime) < CACHE_TTL) {
+    return memoryCache;
+  }
+  
+  const photos = HAS_BLOB_TOKEN ? await readPhotosBlob() : await readPhotosLocal();
+  memoryCache = photos;
+  lastFetchTime = now;
+  return photos;
+}
+
+/**
+ * Write photos (auto-selects storage based on environment)
+ */
+async function writePhotos(photos: PhotoFrame[]): Promise<void> {
+  memoryCache = photos;
+  lastFetchTime = Date.now();
+  
+  if (HAS_BLOB_TOKEN) {
+    await writePhotosBlob(photos);
+  } else {
+    await writePhotosLocal(photos);
   }
 }
 
@@ -92,7 +158,6 @@ export async function getAllPhotos(
   
   // Apply filters
   if (filters) {
-    // Search filter
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       photos = photos.filter(
@@ -103,19 +168,16 @@ export async function getAllPhotos(
       );
     }
     
-    // Tags filter
     if (filters.tags && filters.tags.length > 0) {
       photos = photos.filter((p) =>
         filters.tags!.some((tag) => p.tags.includes(tag))
       );
     }
     
-    // Favorites filter
     if (filters.favoritesOnly) {
       photos = photos.filter((p) => p.isFavorite);
     }
     
-    // Date range filter
     if (filters.dateRange) {
       if (filters.dateRange.from) {
         photos = photos.filter(
@@ -231,7 +293,6 @@ export async function deletePhoto(id: string): Promise<boolean> {
   
   photos.splice(index, 1);
   
-  // Update positions
   photos.forEach((photo, i) => {
     photo.position = i;
   });
@@ -262,10 +323,8 @@ export async function reorderPhotos(
 ): Promise<PhotoFrame[]> {
   const photos = await readPhotos();
   
-  // Create a map for quick lookup
   const photoMap = new Map(photos.map((p) => [p.id, p]));
   
-  // Reorder based on the provided IDs
   const reordered = orderedIds
     .map((id, index) => {
       const photo = photoMap.get(id);
@@ -276,7 +335,6 @@ export async function reorderPhotos(
     })
     .filter((p): p is PhotoFrame => p !== null);
   
-  // Add any photos not in the ordered list at the end
   photos.forEach((photo) => {
     if (!orderedIds.includes(photo.id)) {
       reordered.push({ ...photo, position: reordered.length });

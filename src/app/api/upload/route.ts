@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { put, del } from '@vercel/blob';
+import { promises as fs } from 'fs';
+import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { authOptions } from '@/lib/auth';
 import type { ApiResponse } from '@/types/photo';
+
+/**
+ * Check if we have Vercel Blob token
+ */
+const HAS_BLOB_TOKEN = !!process.env.BLOB_READ_WRITE_TOKEN;
+
+/**
+ * Local upload directory
+ */
+const LOCAL_UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
 
 /**
  * Allowed file types for upload
@@ -34,9 +45,49 @@ function getExtension(mimeType: string): string {
 }
 
 /**
+ * Ensure local upload directory exists
+ */
+async function ensureLocalUploadDir(): Promise<void> {
+  try {
+    await fs.access(LOCAL_UPLOAD_DIR);
+  } catch {
+    await fs.mkdir(LOCAL_UPLOAD_DIR, { recursive: true });
+  }
+}
+
+/**
+ * Upload to local filesystem
+ */
+async function uploadLocal(file: File, filename: string): Promise<string> {
+  await ensureLocalUploadDir();
+  
+  const filepath = path.join(LOCAL_UPLOAD_DIR, filename);
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+  
+  await fs.writeFile(filepath, buffer);
+  
+  return `/uploads/${filename}`;
+}
+
+/**
+ * Upload to Vercel Blob
+ */
+async function uploadBlob(file: File, filename: string): Promise<string> {
+  const { put } = await import('@vercel/blob');
+  
+  const blob = await put(filename, file, {
+    access: 'public',
+    addRandomSuffix: false,
+  });
+  
+  return blob.url;
+}
+
+/**
  * POST /api/upload
  * 
- * Handle file upload to Vercel Blob Storage
+ * Handle file upload
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -86,15 +137,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const extension = getExtension(file.type);
     const filename = `${uuidv4()}${extension}`;
     
-    // Upload to Vercel Blob
-    const blob = await put(filename, file, {
-      access: 'public',
-      addRandomSuffix: false,
-    });
+    // Upload based on environment
+    const url = HAS_BLOB_TOKEN 
+      ? await uploadBlob(file, filename)
+      : await uploadLocal(file, filename);
     
     return NextResponse.json({
       success: true,
-      data: { url: blob.url, filename },
+      data: { url, filename },
       message: 'File uploaded successfully',
     }, { status: 201 });
   } catch (error) {
@@ -109,7 +159,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 /**
  * DELETE /api/upload
  * 
- * Delete an uploaded file from Vercel Blob Storage
+ * Delete an uploaded file
  */
 export async function DELETE(request: NextRequest): Promise<NextResponse> {
   try {
@@ -122,19 +172,41 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
       );
     }
     
-    // Get URL from query params
     const { searchParams } = new URL(request.url);
-    const url = searchParams.get('url');
     
-    if (!url) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: 'URL is required' },
-        { status: 400 }
-      );
+    if (HAS_BLOB_TOKEN) {
+      // Delete from Vercel Blob
+      const url = searchParams.get('url');
+      if (!url) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: 'URL is required' },
+          { status: 400 }
+        );
+      }
+      
+      const { del } = await import('@vercel/blob');
+      await del(url);
+    } else {
+      // Delete from local filesystem
+      const filename = searchParams.get('filename');
+      if (!filename) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: 'Filename is required' },
+          { status: 400 }
+        );
+      }
+      
+      // Security: prevent path traversal
+      if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: 'Invalid filename' },
+          { status: 400 }
+        );
+      }
+      
+      const filepath = path.join(LOCAL_UPLOAD_DIR, filename);
+      await fs.unlink(filepath);
     }
-    
-    // Delete from Vercel Blob
-    await del(url);
     
     return NextResponse.json({
       success: true,
