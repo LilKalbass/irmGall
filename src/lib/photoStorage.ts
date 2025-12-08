@@ -1,87 +1,83 @@
-import { promises as fs } from 'fs';
-import path from 'path';
+import { put, list, del } from '@vercel/blob';
 import { v4 as uuidv4 } from 'uuid';
 import type { Photo, PhotoFrame, PhotoFilters, PhotoSortOption, FrameColor } from '@/types/photo';
 import { getRandomRotation } from './utils';
 
 /**
- * Path to the photos data file
- * Using /tmp for serverless environments (Vercel) where root is read-only
+ * Blob storage filename for photos data
  */
-const IS_SERVERLESS = process.env.VERCEL === '1' || process.env.AWS_LAMBDA_FUNCTION_NAME;
-const DATA_DIR = IS_SERVERLESS 
-  ? '/tmp' 
-  : path.join(process.cwd(), 'src', 'data');
-const PHOTOS_FILE = path.join(DATA_DIR, 'photos.json');
+const PHOTOS_BLOB_NAME = 'photos-data.json';
 
 /**
- * In-memory cache for serverless environments
- * Note: This will reset on cold starts
+ * In-memory cache to reduce blob reads
  */
 let memoryCache: PhotoFrame[] | null = null;
+let lastFetchTime = 0;
+const CACHE_TTL = 5000; // 5 seconds
 
 /**
- * Ensure data directory and file exist
- */
-async function ensureDataFile(): Promise<void> {
-  try {
-    await fs.access(DATA_DIR);
-  } catch {
-    try {
-      await fs.mkdir(DATA_DIR, { recursive: true });
-    } catch {
-      // Directory might already exist or we can't create it
-      console.warn('Could not create data directory:', DATA_DIR);
-    }
-  }
-  
-  try {
-    await fs.access(PHOTOS_FILE);
-  } catch {
-    try {
-      await fs.writeFile(PHOTOS_FILE, JSON.stringify([], null, 2));
-    } catch {
-      // Can't create file, will use memory cache
-      console.warn('Could not create photos.json, using memory cache');
-    }
-  }
-}
-
-/**
- * Read photos from the data file
+ * Read photos from Vercel Blob storage
  */
 async function readPhotos(): Promise<PhotoFrame[]> {
-  // Try memory cache first
-  if (memoryCache !== null) {
+  // Check cache first (within TTL)
+  const now = Date.now();
+  if (memoryCache !== null && (now - lastFetchTime) < CACHE_TTL) {
     return memoryCache;
   }
   
   try {
-    await ensureDataFile();
-    const data = await fs.readFile(PHOTOS_FILE, 'utf-8');
-    const photos = JSON.parse(data);
+    // List blobs to find our data file
+    const { blobs } = await list({ prefix: PHOTOS_BLOB_NAME });
+    
+    if (blobs.length === 0) {
+      // No data file exists yet
+      memoryCache = [];
+      lastFetchTime = now;
+      return [];
+    }
+    
+    // Fetch the data
+    const response = await fetch(blobs[0].url);
+    if (!response.ok) {
+      throw new Error('Failed to fetch photos data');
+    }
+    
+    const photos = await response.json();
     memoryCache = photos;
+    lastFetchTime = now;
     return photos;
   } catch (error) {
-    console.warn('Could not read photos.json, returning empty array:', error);
-    memoryCache = [];
-    return [];
+    console.error('Error reading photos from blob:', error);
+    // Return cache if available, otherwise empty array
+    return memoryCache || [];
   }
 }
 
 /**
- * Write photos to the data file
+ * Write photos to Vercel Blob storage
  */
 async function writePhotos(photos: PhotoFrame[]): Promise<void> {
-  // Always update memory cache
+  // Update memory cache immediately
   memoryCache = photos;
+  lastFetchTime = Date.now();
   
   try {
-    await ensureDataFile();
-    await fs.writeFile(PHOTOS_FILE, JSON.stringify(photos, null, 2));
+    // Delete old blob if exists
+    const { blobs } = await list({ prefix: PHOTOS_BLOB_NAME });
+    for (const blob of blobs) {
+      await del(blob.url);
+    }
+    
+    // Write new data
+    const jsonData = JSON.stringify(photos, null, 2);
+    await put(PHOTOS_BLOB_NAME, jsonData, {
+      access: 'public',
+      addRandomSuffix: false,
+      contentType: 'application/json',
+    });
   } catch (error) {
-    console.warn('Could not write to photos.json, data stored in memory only:', error);
-    // Data is still in memory cache, so operations will work for this request
+    console.error('Error writing photos to blob:', error);
+    // Data is still in memory cache for this request
   }
 }
 
@@ -290,4 +286,3 @@ export async function reorderPhotos(
   await writePhotos(reordered);
   return reordered;
 }
-

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { put, del } from '@vercel/blob';
 import { v4 as uuidv4 } from 'uuid';
 import { authOptions } from '@/lib/auth';
 import type { ApiResponse } from '@/types/photo';
@@ -22,34 +21,6 @@ const ALLOWED_TYPES = [
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 /**
- * Check if running in serverless environment
- */
-const IS_SERVERLESS = process.env.VERCEL === '1' || process.env.AWS_LAMBDA_FUNCTION_NAME;
-
-/**
- * Upload directory path
- * Use /tmp for serverless environments where public folder is read-only
- */
-const UPLOAD_DIR = IS_SERVERLESS
-  ? '/tmp/uploads'
-  : path.join(process.cwd(), 'public', 'uploads');
-
-/**
- * Ensure upload directory exists
- */
-async function ensureUploadDir(): Promise<void> {
-  try {
-    await fs.access(UPLOAD_DIR);
-  } catch {
-    try {
-      await fs.mkdir(UPLOAD_DIR, { recursive: true });
-    } catch (error) {
-      console.warn('Could not create upload directory:', error);
-    }
-  }
-}
-
-/**
  * Get file extension from MIME type
  */
 function getExtension(mimeType: string): string {
@@ -65,7 +36,7 @@ function getExtension(mimeType: string): string {
 /**
  * POST /api/upload
  * 
- * Handle file upload
+ * Handle file upload to Vercel Blob Storage
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -111,27 +82,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
     
-    // Ensure upload directory exists
-    await ensureUploadDir();
-    
     // Generate unique filename
     const extension = getExtension(file.type);
     const filename = `${uuidv4()}${extension}`;
-    const filepath = path.join(UPLOAD_DIR, filename);
     
-    // Read file content
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    
-    // Write file
-    await fs.writeFile(filepath, buffer);
-    
-    // Return the URL (relative to public directory)
-    const url = `/uploads/${filename}`;
+    // Upload to Vercel Blob
+    const blob = await put(filename, file, {
+      access: 'public',
+      addRandomSuffix: false,
+    });
     
     return NextResponse.json({
       success: true,
-      data: { url, filename },
+      data: { url: blob.url, filename },
       message: 'File uploaded successfully',
     }, { status: 201 });
   } catch (error) {
@@ -146,7 +109,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 /**
  * DELETE /api/upload
  * 
- * Delete an uploaded file
+ * Delete an uploaded file from Vercel Blob Storage
  */
 export async function DELETE(request: NextRequest): Promise<NextResponse> {
   try {
@@ -159,39 +122,19 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
       );
     }
     
-    // Get filename from query params
+    // Get URL from query params
     const { searchParams } = new URL(request.url);
-    const filename = searchParams.get('filename');
+    const url = searchParams.get('url');
     
-    if (!filename) {
+    if (!url) {
       return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: 'Filename is required' },
+        { success: false, error: 'URL is required' },
         { status: 400 }
       );
     }
     
-    // Validate filename (security: prevent path traversal)
-    if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: 'Invalid filename' },
-        { status: 400 }
-      );
-    }
-    
-    const filepath = path.join(UPLOAD_DIR, filename);
-    
-    // Check if file exists
-    try {
-      await fs.access(filepath);
-    } catch {
-      return NextResponse.json<ApiResponse<null>>(
-        { success: false, error: 'File not found' },
-        { status: 404 }
-      );
-    }
-    
-    // Delete file
-    await fs.unlink(filepath);
+    // Delete from Vercel Blob
+    await del(url);
     
     return NextResponse.json({
       success: true,
@@ -205,4 +148,3 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
     );
   }
 }
-
