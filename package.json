@@ -12,7 +12,7 @@
     "hash-password": "npx tsx src/scripts/hashPassword.ts"
   },
   "dependencies": {
-    "next": "^15.0.3",
+    "next": "15.0.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "next-auth": "^4.24.8",
@@ -56,4 +56,3 @@
     "ts-node": "^10.9.2"
   }
 }
-
